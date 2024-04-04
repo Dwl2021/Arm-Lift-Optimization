@@ -1,9 +1,9 @@
-function Q = getQ_p(n_seg, n_order, T)
+function Q = getQ_p_arms(n_seg, n_order, T)
     Q = [];
     
     for k = 1:n_seg
-        %#####################################################
         Q_k=zeros(n_order+1,n_order+1);
+%        minimum the acc or jerk or acc
 %         for i=0:n_order
 %             for l=0:n_order
 % %                 Q_k(i+1,l+1)=fac(i)*fac(l)/(i+l-7)*T(k)^(i+l-7);
@@ -28,7 +28,6 @@ function Q = getQ_p(n_seg, n_order, T)
         Q(k * n +1, (k-1) * n +1) = -1;
         Q((k-1) * n +1 , k * n +1) = -1;
     end
-    Q
 end
 
 function [res] = continue_mul(x, n_order)
