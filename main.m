@@ -1,18 +1,21 @@
 clear;close all;clc;
 
-mapsize = [200,100] % x,y
+%% init
+addpath('./minimumSnap/')
+mapsize = [200,100]; % x,y
 map = ones(mapsize(1), mapsize(2));
 figure('Position', [200, 200, 800, 800 * mapsize(2) / mapsize(1)]);
 axis([0 mapsize(1) 0 mapsize(2)]);
 hold on;
+ 
+% add obstacle and dilate
 map = add_obstacle(map);
 map_dilation = mapDilation(map, 7);
 map_dilation = add_boundary(map_dilation);
 
+% start and goal
 start = [10, 10];
-goal = [150, 48];
-
-[path, goal_reached, cost, EXPAND] = jps(map_dilation, start, goal);
+goal = [180, 48];
 
 % plot map
 x_obstacle = [];
@@ -28,17 +31,45 @@ end
 scatter(x_obstacle, y_obstacle, 10, 'filled', 'MarkerFaceColor', 'black');
 hold on;
 
-if goal_reached
-    plot(path(:,1), path(:,2), 'Color', 'red', 'LineWidth', 2);
+
+%% path searching
+[path, goal_reached, cost, EXPAND] = jps(map_dilation, start, goal);
+if ~goal_reached
+    error('Goal not reached!'); 
 end
 
+
+%% Minimum Snap Trajectory
+[coff_x,coff_y,ts] = QPSolver(path, 40, 10, 0.1, 7);
+
+X_n = [];
+Y_n = [];
+k = 1;
+n_seg = size(path,1)-1;
+tstep = 0.01;
+n_order = 7;
+for i=0:n_seg-1
+    Pxi = coff_x((n_order+1)*i+1:(n_order+1)*i+n_order+1); % note (n_order+1) jump to another segment!
+    Pyi = coff_y((n_order+1)*i+1:(n_order+1)*i+n_order+1);
+    for t=0:tstep:ts(i+1)
+        X_n(k)  = polyval(flip(Pxi),t);
+        Y_n(k)  = polyval(flip(Pyi),t);
+        k = k+1;
+    end
+end
+
+plot(X_n, Y_n ,'Color','#FFA500','LineWidth',5);
+hold on
+
+scatter(path(:,1), path(:,2),  'filled', 'MarkerFaceColor', '#1E90FF', 'SizeData', 200, 'Marker', '^');
+hold on;
 
 plot_quadrotor(start(1),start(2)+2, pi/6,5);
 
 
 
 function [map] = add_obstacle(map)
-    x = size(map,1) *0.7;
+    x = size(map,1) *0.8;
     y = 1;
     width = size(map,1) * 0.1;
     height = size(map,2) * 0.4;
@@ -89,7 +120,6 @@ function [] = plot_quadrotor(x, y, theta, armlength)
     arm2 = [x + l/2, y; x + l/2, y + h];
     arm3 = [x, y - 2; x , y];
     arm4 = [x, y - 2 ; x + armlength * sin(theta), y - armlength * cos(theta) - 2];
-    arm4
     prop1 = [x - l/2 - wind/2, y + h; x - l/2 + wind/2, y + h];
     prop2 = [x + l/2 - wind/2, y + h; x + l/2 + wind/2, y + h];
     hold on; % Hold the plot to draw all parts
