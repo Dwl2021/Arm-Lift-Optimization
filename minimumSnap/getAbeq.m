@@ -45,10 +45,7 @@ function [Aeq, beq]= getAbeq(n_seg, n_order, waypoints, ts, start_cond, end_cond
             Aeq_con(1+4*k:4+4*k,1+8*k:8+8*k) = getCoeff(ts(k+1));
             Aeq_con(1+4*k:4+4*k,1+8*(k+1):8+8*(k+1)) = -getCoeff(0);            
     end
-    size(Aeq_start)
-    size(Aeq_end)
-    size(Aeq_wp)
-    size(Aeq_con)
+
     %#####################################################
     % combine all components to form Aeq and beq:  
     Aeq = [Aeq_start; Aeq_end; Aeq_wp; Aeq_con];
